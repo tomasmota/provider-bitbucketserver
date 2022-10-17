@@ -1,7 +1,7 @@
-apiVersion: sample.bitbucketserver.crossplane.io/v1alpha1
-kind: MyType
+apiVersion: project.bitbucketserver.crossplane.io/v1alpha1
+kind: Project
 metadata:
-  name: example
+  name: testproject
 spec:
   forProvider:
     configurableField: test
