@@ -28,11 +28,14 @@ import (
 // ProjectParameters are the configurable fields of a Project.
 type ProjectParameters struct {
 	ConfigurableField string `json:"configurableField"`
+	Name              string `json:"name"`
+	Key               string `json:"key"`
+	Public            bool   `json:"public"`
 }
 
 // ProjectObservation are the observable fields of a Project.
 type ProjectObservation struct {
-	ObservableField string `json:"observableField,omitempty"`
+	Id int `json:"id"`
 }
 
 // A ProjectSpec defines the desired state of a Project.
