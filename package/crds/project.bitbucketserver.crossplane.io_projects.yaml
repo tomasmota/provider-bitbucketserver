@@ -66,6 +66,8 @@ spec:
                 properties:
                   configurableField:
                     type: string
+                  description:
+                    type: string
                   key:
                     type: string
                   name:
@@ -76,7 +78,6 @@ spec:
                 - configurableField
                 - key
                 - name
-                - public
                 type: object
               providerConfigRef:
                 default:

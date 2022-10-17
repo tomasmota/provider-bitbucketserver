@@ -30,7 +30,10 @@ type ProjectParameters struct {
 	ConfigurableField string `json:"configurableField"`
 	Name              string `json:"name"`
 	Key               string `json:"key"`
-	Public            bool   `json:"public"`
+	// +optional
+	Public bool `json:"public,omitempty"`
+	// +optional
+	Description string `json:"description,omitempty"`
 }
 
 // ProjectObservation are the observable fields of a Project.

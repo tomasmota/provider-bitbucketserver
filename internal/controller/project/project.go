@@ -34,6 +34,7 @@ import (
 
 	"github.com/tomas-mota/provider-bitbucketserver/apis/project/v1alpha1"
 	apisv1alpha1 "github.com/tomas-mota/provider-bitbucketserver/apis/v1alpha1"
+	"github.com/tomas-mota/provider-bitbucketserver/internal/bitbucket"
 	"github.com/tomas-mota/provider-bitbucketserver/internal/controller/features"
 )
 
@@ -46,11 +47,19 @@ const (
 	errNewClient = "cannot create new Service"
 )
 
-// A NoOpService does nothing.
-type NoOpService struct{}
+// A BitbucketService provides operations against bitbucket
+type BitbucketService struct {
+	Client *bitbucket.Client
+}
 
 var (
-	newNoOpService = func(_ []byte) (interface{}, error) { return &NoOpService{}, nil }
+	newBitbucketService = func(baseURL string, creds []byte) (interface{}, error) {
+		c, err := bitbucket.NewClient(baseURL, string(creds))
+		if err != nil {
+			panic(err)
+		}
+		return c, nil
+	}
 )
 
 // Setup adds a controller that reconciles Project managed resources.
@@ -67,7 +76,7 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 		managed.WithExternalConnecter(&connector{
 			kube:         mgr.GetClient(),
 			usage:        resource.NewProviderConfigUsageTracker(mgr.GetClient(), &apisv1alpha1.ProviderConfigUsage{}),
-			newServiceFn: newNoOpService}),
+			newServiceFn: newBitbucketService}),
 		managed.WithLogger(o.Logger.WithValues("controller", name)),
 		managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name))),
 		managed.WithConnectionPublishers(cps...))
@@ -84,7 +93,7 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 type connector struct {
 	kube         client.Client
 	usage        resource.Tracker
-	newServiceFn func(creds []byte) (interface{}, error)
+	newServiceFn func(baseURL string, creds []byte) (interface{}, error)
 }
 
 // Connect typically produces an ExternalClient by:
@@ -113,7 +122,7 @@ func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.E
 		return nil, errors.Wrap(err, errGetCreds)
 	}
 
-	svc, err := c.newServiceFn(data)
+	svc, err := c.newServiceFn(pc.Spec.BaseURL, data)
 	if err != nil {
 		return nil, errors.Wrap(err, errNewClient)
 	}

@@ -29,6 +29,8 @@ import (
 type ProviderConfigSpec struct {
 	// Credentials required to authenticate to this provider.
 	Credentials ProviderCredentials `json:"credentials"`
+	// Base Url of bitbucket server
+	BaseURL string `json:"baseurl"`
 }
 
 // ProviderCredentials required to authenticate.
