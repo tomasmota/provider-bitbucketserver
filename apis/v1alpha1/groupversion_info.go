@@ -14,9 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package v1alpha1 contains the core resources of the Template provider.
+// Package v1alpha1 contains the core resources of the BitbucketServer provider.
 // +kubebuilder:object:generate=true
-// +groupName=template.crossplane.io
+// +groupName=bitbucketserver.crossplane.io
 // +versionName=v1alpha1
 package v1alpha1
 
@@ -27,7 +27,7 @@ import (
 
 // Package type metadata.
 const (
-	Group   = "template.crossplane.io"
+	Group   = "bitbucketserver.crossplane.io"
 	Version = "v1alpha1"
 )
 
