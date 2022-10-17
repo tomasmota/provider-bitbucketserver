@@ -4,6 +4,7 @@ metadata:
   name: testproject
 spec:
   forProvider:
-    configurableField: test
+    name: providertest
+    key: PVT
   providerConfigRef:
-    name: example
+    name: mybitbucketserver

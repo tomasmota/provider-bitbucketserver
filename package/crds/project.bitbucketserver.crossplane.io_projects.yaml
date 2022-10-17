@@ -64,8 +64,6 @@ spec:
               forProvider:
                 description: ProjectParameters are the configurable fields of a Project.
                 properties:
-                  configurableField:
-                    type: string
                   description:
                     type: string
                   key:
@@ -75,7 +73,6 @@ spec:
                   public:
                     type: boolean
                 required:
-                - configurableField
                 - key
                 - name
                 type: object

@@ -3,7 +3,10 @@ package bitbucket
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
+
+	"golang.org/x/oauth2"
 )
 
 const (
@@ -20,7 +23,16 @@ func NewClient(baseURL string, token string) (*Client, error) {
 
 	c := &Client{
 		baseURL: fmt.Sprintf("%s%s", baseURL, apiPath),
-		client:  NewBearerHttpClient(token),
+		client: &http.Client{
+			Timeout: time.Second * 10,
+			Transport: &oauth2.Transport{
+				Source: oauth2.StaticTokenSource(
+					&oauth2.Token{
+						AccessToken: strings.TrimSpace(token),
+					},
+				),
+			},
+		},
 	}
 	err := c.ping()
 	if err != nil {
@@ -37,23 +49,4 @@ func (c *Client) ping() error {
 		return fmt.Errorf("error fetching projects: %w", err)
 	}
 	return nil
-}
-
-// TODO: replace this with oauth package roundtripper
-type bearerRoundTripper struct {
-	token string // Bearer token
-}
-
-func (t *bearerRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
-	r.Header.Add("Authorization", "Bearer "+t.token)
-	return http.DefaultTransport.RoundTrip(r)
-}
-
-func NewBearerHttpClient(token string) *http.Client {
-	return &http.Client{
-		Timeout: time.Second * 10,
-		Transport: &bearerRoundTripper{
-			token: token,
-		},
-	}
 }

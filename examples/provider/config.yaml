@@ -10,7 +10,7 @@ data:
 apiVersion: bitbucketserver.crossplane.io/v1alpha1
 kind: ProviderConfig
 metadata:
-  name: demo
+  name: mybitbucketserver
 spec:
   baseURL: https://my-bitbucket-server.com
   credentials:

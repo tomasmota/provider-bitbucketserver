@@ -44,6 +44,7 @@ spec:
             description: A ProviderConfigSpec defines the desired state of a ProviderConfig.
             properties:
               baseurl:
+                description: Base Url of bitbucket server
                 type: string
               credentials:
                 description: Credentials required to authenticate to this provider.
