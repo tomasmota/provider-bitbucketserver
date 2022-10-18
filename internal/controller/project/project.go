@@ -53,12 +53,9 @@ type BitbucketService struct {
 }
 
 var (
-	newBitbucketService = func(baseURL string, creds []byte) (interface{}, error) {
+	newBitbucketService = func(baseURL string, creds []byte) (*BitbucketService, error) {
 		c, err := bitbucket.NewClient(baseURL, string(creds))
-		if err != nil {
-			panic(err)
-		}
-		return c, nil
+		return &BitbucketService{Client: c}, err
 	}
 )
 
@@ -93,7 +90,7 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 type connector struct {
 	kube         client.Client
 	usage        resource.Tracker
-	newServiceFn func(baseURL string, creds []byte) (interface{}, error)
+	newServiceFn func(baseURL string, creds []byte) (*BitbucketService, error)
 }
 
 // Connect typically produces an ExternalClient by:
@@ -135,7 +132,7 @@ func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.E
 type external struct {
 	// A 'client' used to connect to the external resource API. In practice this
 	// would be something like an AWS SDK client.
-	service interface{}
+	service *BitbucketService
 }
 
 func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.ExternalObservation, error) {
@@ -146,6 +143,12 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 
 	// These fmt statements should be removed in the real implementation.
 	fmt.Printf("Observing: %+v", cr)
+
+	// p, err := c.service.Client.GetProject(cr.Spec.ForProvider.Key)
+	// TODO: find out what error this is. if not found, set resourceexists: false
+	// if bErr := err(*bitbucket.Error) && bErr.c{
+	// 	return managed.ExternalObservation{}, err
+	// }
 
 	return managed.ExternalObservation{
 		// Return false when the external resource does not exist. This lets
