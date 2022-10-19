@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -16,7 +17,7 @@ type Client struct {
 	client *http.Client
 
 	// base URL for the bitbucket server
-	baseURL string
+	baseURL *url.URL
 
 	Projects ProjectService
 }
@@ -28,12 +29,17 @@ var (
 
 func NewClient(baseURL string, base64creds string) (*Client, error) {
 	fmt.Printf("creating bitbucket client, endpoint: %s\n", baseURL)
+	pBaseURL, err := url.Parse(fmt.Sprintf("%s%s", baseURL, apiPath))
+	if err != nil {
+		return nil, err
+	}
 
 	c := &Client{
-		baseURL: fmt.Sprintf("%s%s", baseURL, apiPath),
+		baseURL: pBaseURL,
 		client:  NewBasicAuthHttpClient(base64creds),
 	}
-	err := c.ping()
+
+	err = c.ping()
 	if err != nil {
 		return nil, fmt.Errorf("error creating bitbucket client: %w", err)
 	}
@@ -50,13 +56,6 @@ func (c *Client) ping() error {
 	}
 	return nil
 }
-
-// func (c *Client) newRequest(method string, path string, body interface{}) (*http.Request, error) {
-// 	url := fmt.Sprintf("%s/projects/%s", ps.client.baseURL, key)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// }
 
 type Project struct {
 	Name        string `json:"name"`
