@@ -1,8 +1,7 @@
 package bitbucket
 
 import (
-	"encoding/json"
-	"errors"
+	"context"
 	"fmt"
 )
 
@@ -14,24 +13,26 @@ type projectService struct {
 	client *Client
 }
 
+type Project struct {
+	Name        string `json:"name"`
+	Key         string `json:"key"`
+	ID          int    `json:"id"`
+	Description string `json:"description"`
+	Scope       string `json:"scope,omitempty"`
+	Type        string `json:"type"`
+	Public      bool   `json:"public"`
+}
+
 func (ps *projectService) GetProject(key string) (*Project, error) {
-	r, err := ps.client.client.Get(fmt.Sprintf("%s/projects/%s", ps.client.baseURL, key))
+	req, err := ps.client.newRequest("GET", fmt.Sprintf("projects/%s", key), nil)
 	if err != nil {
-		return nil, fmt.Errorf("error fetching project with key %s: %w", key, err)
+		return nil, fmt.Errorf("error creating request for getting projects: %w", err)
 	}
-	switch r.StatusCode {
-	case 404:
-		return nil, ErrNotFound
-	case 401:
-		return nil, ErrPermission
-	}
-	p := &Project{}
 
-	defer r.Body.Close()
-
-	err = json.NewDecoder(r.Body).Decode(p)
+	p := Project{}
+	err = ps.client.do(context.Background(), req, &p)
 	if err != nil {
-		return nil, errors.New("error decoding project from api response")
+		return nil, fmt.Errorf("error fetching projects: %w", err)
 	}
-	return p, nil
+	return &p, nil
 }
