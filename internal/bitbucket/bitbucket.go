@@ -17,9 +17,15 @@ type Client struct {
 	client  *http.Client
 }
 
+var (
+	ErrPermission = errors.New("permission") // Permission denied.
+	ErrNotFound   = errors.New("not_found")  // Resource not found.
+)
+
 func NewClient(baseURL string, base64creds string) (*Client, error) {
 	fmt.Printf("creating bitbucket client, endpoint: %s\n", baseURL)
 
+	fmt.Printf("\n\n\n\n creds: %s \n\n\n\n", base64creds)
 	c := &Client{
 		baseURL: fmt.Sprintf("%s%s", baseURL, apiPath),
 		client:  NewBasicAuthHttpClient(base64creds),
@@ -54,13 +60,13 @@ type Project struct {
 func (c *Client) GetProject(key string) (*Project, error) {
 	r, err := c.client.Get(fmt.Sprintf("%s/projects/%s", c.baseURL, key))
 	if err != nil {
-		return nil, errors.New("error fetching project with key " + key)
+		return nil, fmt.Errorf("error fetching project with key %s: %w", key, err)
 	}
-	if r.StatusCode == 404 {
-		return nil, &Error{
-			msg:  fmt.Sprintf("Project with key %s does not exist", key),
-			Code: ErrNotFound,
-		}
+	switch r.StatusCode {
+	case 404:
+		return nil, ErrNotFound
+	case 401:
+		return nil, ErrPermission
 	}
 	p := &Project{}
 
@@ -70,7 +76,7 @@ func (c *Client) GetProject(key string) (*Project, error) {
 	if err != nil {
 		return nil, errors.New("error decoding project from api response")
 	}
-	fmt.Println("GOT PROJECT BACK, TYPE: " + string(p.Type))
+	fmt.Println("GOT PROJECT BACK, TYPE: " + string(p.Type)) // TODO: remove after testing
 	return p, nil
 }
 
@@ -91,23 +97,3 @@ func NewBasicAuthHttpClient(creds string) *http.Client {
 		},
 	}
 }
-
-// ErrorCode defines the code of an error.
-type ErrorCode string
-
-const (
-	ErrPermission ErrorCode = "permission" // Permission denied.
-	ErrNotFound   ErrorCode = "not_found"  // Resource not found.
-)
-
-// Error represents common errors originating from the Client.
-type Error struct {
-	// msg contains the human readable string
-	msg string
-
-	// Code specifies the error code. i.e; NotFound, Permission, etc...
-	Code ErrorCode
-}
-
-// Error returns the string representation of the error.
-func (e *Error) Error() string { return e.msg }

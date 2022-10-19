@@ -144,12 +144,24 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 	// These fmt statements should be removed in the real implementation.
 	fmt.Printf("Observing: %+v", cr)
 
-	// p, err := c.service.Client.GetProject(cr.Spec.ForProvider.Key)
-	// TODO: find out what error this is. if not found, set resourceexists: false
-	// if bErr := err(*bitbucket.Error) && bErr.c{
-	// 	return managed.ExternalObservation{}, err
-	// }
+	p, err := c.service.Client.GetProject(cr.Spec.ForProvider.Key)
+	if err != nil {
+		if errors.Is(err, bitbucket.ErrNotFound) {
+			fmt.Printf("\n\n\n\n %s DOES NOT EXIST \n\n\n\n", cr.Spec.ForProvider.Key)
+			return managed.ExternalObservation{ResourceExists: false}, nil
+		}
+		fmt.Printf("\n\n\n\n %s - OTHER ERROR \n\n\n\n", cr.Spec.ForProvider.Key)
+		return managed.ExternalObservation{}, errors.Wrap(err, "error fetching Bitbucket project")
+	}
 
+	if p.Description != cr.Spec.ForProvider.Description ||
+		p.Name != cr.Spec.ForProvider.Name ||
+		p.Key != cr.Spec.ForProvider.Key {
+		fmt.Printf("\n\n\n\n %s EXISTS BUT NOT SYNCED \n\n\n\n", cr.Spec.ForProvider.Key)
+		return managed.ExternalObservation{ResourceUpToDate: false}, nil
+	}
+
+	fmt.Printf("\n\n\n\n %s EXISTS AND SYNCED \n\n\n\n", cr.Spec.ForProvider.Key)
 	return managed.ExternalObservation{
 		// Return false when the external resource does not exist. This lets
 		// the managed resource reconciler know that it needs to call Create to
