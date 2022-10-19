@@ -4,7 +4,7 @@ metadata:
   name: testproject
 spec:
   forProvider:
-    name: providertest
-    key: PVT
+    name: testproject
+    key: PRJ
   providerConfigRef:
     name: mybitbucketserver

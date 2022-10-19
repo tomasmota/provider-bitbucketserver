@@ -25,7 +25,6 @@ var (
 func NewClient(baseURL string, base64creds string) (*Client, error) {
 	fmt.Printf("creating bitbucket client, endpoint: %s\n", baseURL)
 
-	fmt.Printf("\n\n\n\n creds: %s \n\n\n\n", base64creds)
 	c := &Client{
 		baseURL: fmt.Sprintf("%s%s", baseURL, apiPath),
 		client:  NewBasicAuthHttpClient(base64creds),
@@ -76,7 +75,6 @@ func (c *Client) GetProject(key string) (*Project, error) {
 	if err != nil {
 		return nil, errors.New("error decoding project from api response")
 	}
-	fmt.Println("GOT PROJECT BACK, TYPE: " + string(p.Type)) // TODO: remove after testing
 	return p, nil
 }
 
