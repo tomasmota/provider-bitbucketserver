@@ -144,25 +144,26 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 	// These fmt statements should be removed in the real implementation.
 	fmt.Printf("Observing: %+v", cr)
 
-	p, err := c.service.Client.Projects.GetProject(ctx, cr.Spec.ForProvider.Key)
+	p, err := c.service.Client.Projects.GetProject(ctx, &bitbucket.GetProjectRequest{Key: cr.Spec.ForProvider.Key})
 	if err != nil {
 		if errors.Is(err, bitbucket.ErrNotFound) {
-			fmt.Printf("\n\n\n\n %s DOES NOT EXIST \n\n\n\n", cr.Spec.ForProvider.Key)
 			return managed.ExternalObservation{ResourceExists: false}, nil
 		}
-		fmt.Printf("\n\n\n\n %s - OTHER ERROR \n\n\n\n", cr.Spec.ForProvider.Key)
 		return managed.ExternalObservation{}, errors.Wrap(err, "error fetching Bitbucket project")
 	}
 
-	if p.Description != cr.Spec.ForProvider.Description ||
-		p.Name != cr.Name ||
-		p.Key != cr.Spec.ForProvider.Key {
-		fmt.Printf("\n\n\n\n %s EXISTS BUT NOT SYNCED \n\n\n\n", cr.Spec.ForProvider.Key)
-		return managed.ExternalObservation{ResourceUpToDate: false}, nil
+	cr.SetConditions(xpv1.Available())
+
+	// We only update the resource if 'description' or 'public' fields change
+	if p.Description != cr.Spec.ForProvider.Description || p.Public != cr.Spec.ForProvider.Public {
+		return managed.ExternalObservation{
+			ResourceExists:   true,
+			ResourceUpToDate: false,
+		}, nil
 	}
 
-	cr.Status.AtProvider.Id = p.ID
-	fmt.Printf("\n\n\n\n %s EXISTS AND SYNCED \n\n\n\n", cr.Spec.ForProvider.Key)
+	cr.Status.AtProvider.ID = p.ID
+
 	return managed.ExternalObservation{
 		// Return false when the external resource does not exist. This lets
 		// the managed resource reconciler know that it needs to call Create to
@@ -214,8 +215,16 @@ func (c *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 		return managed.ExternalUpdate{}, errors.New(errNotProject)
 	}
 
-	fmt.Printf("Updating: %+v", cr)
+	updateReq := &bitbucket.UpdateProjectRequest{
+		Key:         cr.Spec.ForProvider.Key,
+		Description: cr.Spec.ForProvider.Description,
+		Public:      cr.Spec.ForProvider.Public,
+	}
 
+	_, err := c.service.Client.Projects.UpdateProject(ctx, updateReq)
+	if err != nil {
+		return managed.ExternalUpdate{}, err
+	}
 	return managed.ExternalUpdate{
 		// Optionally return any details that may be required to connect to the
 		// external resource. These will be stored as the connection secret.
@@ -230,7 +239,9 @@ func (c *external) Delete(ctx context.Context, mg resource.Managed) error {
 	}
 	cr.SetConditions(xpv1.Deleting())
 
-	fmt.Printf("Deleting: %+v", cr)
+	c.service.Client.Projects.DeleteProject(ctx, &bitbucket.DeleteProjectRequest{
+		Key: cr.Spec.ForProvider.Key,
+	})
 
 	return nil
 }

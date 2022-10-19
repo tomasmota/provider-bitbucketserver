@@ -36,7 +36,7 @@ type ProjectParameters struct {
 
 // ProjectObservation are the observable fields of a Project.
 type ProjectObservation struct {
-	Id int `json:"id"`
+	ID int `json:"id"`
 }
 
 // A ProjectSpec defines the desired state of a Project.
