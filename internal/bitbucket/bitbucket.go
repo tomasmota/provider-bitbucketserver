@@ -1,7 +1,6 @@
 package bitbucket
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -13,8 +12,13 @@ const (
 )
 
 type Client struct {
+	// client represents the HTTP client used for making HTTP requests.
+	client *http.Client
+
+	// base URL for the bitbucket server
 	baseURL string
-	client  *http.Client
+
+	Projects ProjectService
 }
 
 var (
@@ -34,8 +38,9 @@ func NewClient(baseURL string, base64creds string) (*Client, error) {
 		return nil, fmt.Errorf("error creating bitbucket client: %w", err)
 	}
 
-	return c, nil
+	c.Projects = &projectService{client: c}
 
+	return c, nil
 }
 
 func (c *Client) ping() error {
@@ -46,6 +51,13 @@ func (c *Client) ping() error {
 	return nil
 }
 
+// func (c *Client) newRequest(method string, path string, body interface{}) (*http.Request, error) {
+// 	url := fmt.Sprintf("%s/projects/%s", ps.client.baseURL, key)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// }
+
 type Project struct {
 	Name        string `json:"name"`
 	Key         string `json:"key"`
@@ -54,28 +66,6 @@ type Project struct {
 	Scope       string `json:"scope,omitempty"`
 	Type        string `json:"type"`
 	Public      bool   `json:"public"`
-}
-
-func (c *Client) GetProject(key string) (*Project, error) {
-	r, err := c.client.Get(fmt.Sprintf("%s/projects/%s", c.baseURL, key))
-	if err != nil {
-		return nil, fmt.Errorf("error fetching project with key %s: %w", key, err)
-	}
-	switch r.StatusCode {
-	case 404:
-		return nil, ErrNotFound
-	case 401:
-		return nil, ErrPermission
-	}
-	p := &Project{}
-
-	defer r.Body.Close()
-
-	err = json.NewDecoder(r.Body).Decode(p)
-	if err != nil {
-		return nil, errors.New("error decoding project from api response")
-	}
-	return p, nil
 }
 
 type bearerRoundTripper struct {

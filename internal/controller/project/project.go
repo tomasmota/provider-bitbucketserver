@@ -144,7 +144,7 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 	// These fmt statements should be removed in the real implementation.
 	fmt.Printf("Observing: %+v", cr)
 
-	p, err := c.service.Client.GetProject(cr.Spec.ForProvider.Key)
+	p, err := c.service.Client.Projects.GetProject(cr.Spec.ForProvider.Key)
 	if err != nil {
 		if errors.Is(err, bitbucket.ErrNotFound) {
 			fmt.Printf("\n\n\n\n %s DOES NOT EXIST \n\n\n\n", cr.Spec.ForProvider.Key)
