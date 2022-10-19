@@ -27,8 +27,7 @@ import (
 
 // ProjectParameters are the configurable fields of a Project.
 type ProjectParameters struct {
-	Name string `json:"name"`
-	Key  string `json:"key"`
+	Key string `json:"key"`
 	// +optional
 	Public bool `json:"public,omitempty"`
 	// +optional
