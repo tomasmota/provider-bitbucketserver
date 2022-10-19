@@ -20,17 +20,17 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pkg/errors"
-	"k8s.io/apimachinery/pkg/types"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/connection"
 	"github.com/crossplane/crossplane-runtime/pkg/controller"
 	"github.com/crossplane/crossplane-runtime/pkg/event"
 	"github.com/crossplane/crossplane-runtime/pkg/ratelimiter"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
+	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/types"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/tomas-mota/provider-bitbucketserver/apis/project/v1alpha1"
 	apisv1alpha1 "github.com/tomas-mota/provider-bitbucketserver/apis/v1alpha1"
@@ -144,7 +144,7 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 	// These fmt statements should be removed in the real implementation.
 	fmt.Printf("Observing: %+v", cr)
 
-	p, err := c.service.Client.Projects.GetProject(cr.Spec.ForProvider.Key)
+	p, err := c.service.Client.Projects.GetProject(ctx, cr.Spec.ForProvider.Key)
 	if err != nil {
 		if errors.Is(err, bitbucket.ErrNotFound) {
 			fmt.Printf("\n\n\n\n %s DOES NOT EXIST \n\n\n\n", cr.Spec.ForProvider.Key)
@@ -155,12 +155,13 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 	}
 
 	if p.Description != cr.Spec.ForProvider.Description ||
-		p.Name != cr.Spec.ForProvider.Name ||
+		p.Name != cr.Name ||
 		p.Key != cr.Spec.ForProvider.Key {
 		fmt.Printf("\n\n\n\n %s EXISTS BUT NOT SYNCED \n\n\n\n", cr.Spec.ForProvider.Key)
 		return managed.ExternalObservation{ResourceUpToDate: false}, nil
 	}
 
+	cr.Status.AtProvider.Id = p.ID
 	fmt.Printf("\n\n\n\n %s EXISTS AND SYNCED \n\n\n\n", cr.Spec.ForProvider.Key)
 	return managed.ExternalObservation{
 		// Return false when the external resource does not exist. This lets
@@ -185,7 +186,20 @@ func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 		return managed.ExternalCreation{}, errors.New(errNotProject)
 	}
 
+	cr.SetConditions(xpv1.Creating())
 	fmt.Printf("Creating: %+v", cr)
+
+	createReq := &bitbucket.CreateProjectRequest{
+		Name:        cr.Name,
+		Key:         cr.Spec.ForProvider.Key,
+		Description: cr.Spec.ForProvider.Description,
+		Public:      cr.Spec.ForProvider.Public,
+	}
+
+	_, err := c.service.Client.Projects.CreateProject(ctx, createReq)
+	if err != nil {
+		return managed.ExternalCreation{}, err
+	}
 
 	return managed.ExternalCreation{
 		// Optionally return any details that may be required to connect to the
@@ -214,6 +228,7 @@ func (c *external) Delete(ctx context.Context, mg resource.Managed) error {
 	if !ok {
 		return errors.New(errNotProject)
 	}
+	cr.SetConditions(xpv1.Deleting())
 
 	fmt.Printf("Deleting: %+v", cr)
 

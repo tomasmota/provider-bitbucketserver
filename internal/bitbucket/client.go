@@ -156,21 +156,3 @@ func (c *Client) handleResponse(ctx context.Context, res *http.Response, v inter
 	fmt.Println(v)
 	return nil
 }
-
-// type bearerRoundTripper struct {
-// 	base64creds string // Basic auth creds
-// }
-
-// func (t *bearerRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
-// 	r.Header.Add("Authorization", "Basic "+t.base64creds)
-// 	return http.DefaultTransport.RoundTrip(r)
-// }
-
-// func NewBasicAuthHttpClient(creds string) *http.Client {
-// 	return &http.Client{
-// 		Timeout: time.Second * 10,
-// 		Transport: &bearerRoundTripper{
-// 			base64creds: creds,
-// 		},
-// 	}
-// }
