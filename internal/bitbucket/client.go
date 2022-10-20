@@ -152,6 +152,5 @@ func (c *Client) handleResponse(ctx context.Context, res *http.Response, v inter
 		return err
 	}
 
-	fmt.Println(v)
 	return nil
 }

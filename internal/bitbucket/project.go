@@ -42,6 +42,10 @@ func (ps *projectService) GetProject(ctx context.Context, getReq *GetProjectRequ
 	if err != nil {
 		return nil, fmt.Errorf("error fetching projects: %w", err)
 	}
+	// We only consider that this project exists if both key and name match
+	if p.Name != getReq.Name {
+		return nil, ErrNotFound
+	}
 	return &p, nil
 }
 

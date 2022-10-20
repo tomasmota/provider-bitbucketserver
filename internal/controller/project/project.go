@@ -130,8 +130,7 @@ func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.E
 // An ExternalClient observes, then either creates, updates, or deletes an
 // external resource to ensure it reflects the managed resource's desired state.
 type external struct {
-	// A 'client' used to connect to the external resource API. In practice this
-	// would be something like an AWS SDK client.
+	// A 'client' used to connect to the external resource API.
 	service *BitbucketService
 }
 
@@ -141,10 +140,10 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 		return managed.ExternalObservation{}, errors.New(errNotProject)
 	}
 
-	// These fmt statements should be removed in the real implementation.
-	fmt.Printf("Observing: %+v", cr)
-
-	p, err := c.service.Client.Projects.GetProject(ctx, &bitbucket.GetProjectRequest{Key: cr.Spec.ForProvider.Key})
+	p, err := c.service.Client.Projects.GetProject(ctx, &bitbucket.GetProjectRequest{
+		Key:  cr.Spec.ForProvider.Key,
+		Name: cr.Name,
+	})
 	if err != nil {
 		if errors.Is(err, bitbucket.ErrNotFound) {
 			return managed.ExternalObservation{ResourceExists: false}, nil
@@ -154,7 +153,6 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 
 	cr.SetConditions(xpv1.Available())
 
-	// We only update the resource if 'description' or 'public' fields change
 	if p.Description != cr.Spec.ForProvider.Description || p.Public != cr.Spec.ForProvider.Public {
 		return managed.ExternalObservation{
 			ResourceExists:   true,
@@ -202,11 +200,7 @@ func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 		return managed.ExternalCreation{}, err
 	}
 
-	return managed.ExternalCreation{
-		// Optionally return any details that may be required to connect to the
-		// external resource. These will be stored as the connection secret.
-		ConnectionDetails: managed.ConnectionDetails{},
-	}, nil
+	return managed.ExternalCreation{ConnectionDetails: managed.ConnectionDetails{}}, nil
 }
 
 func (c *external) Update(ctx context.Context, mg resource.Managed) (managed.ExternalUpdate, error) {
@@ -225,11 +219,8 @@ func (c *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 	if err != nil {
 		return managed.ExternalUpdate{}, err
 	}
-	return managed.ExternalUpdate{
-		// Optionally return any details that may be required to connect to the
-		// external resource. These will be stored as the connection secret.
-		ConnectionDetails: managed.ConnectionDetails{},
-	}, nil
+
+	return managed.ExternalUpdate{ConnectionDetails: managed.ConnectionDetails{}}, nil
 }
 
 func (c *external) Delete(ctx context.Context, mg resource.Managed) error {
