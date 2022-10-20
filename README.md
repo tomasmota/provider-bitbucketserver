@@ -1,7 +1,10 @@
+This project contains a crossplane provider for managing Bitbucket Server resources
+
 ## Want to manage the following
-- projects
+- projects ✅
 - repos
 - project access mapping to groups
 
 ## TODO
-- ensure each key is only under one name
+- Add Test scenarios
+- Setup build
