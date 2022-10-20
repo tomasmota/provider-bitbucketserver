@@ -37,7 +37,6 @@ var (
 )
 
 func NewClient(baseURL string, base64creds string) (*Client, error) {
-	fmt.Printf("creating bitbucket client, endpoint: %s\n", baseURL)
 	pBaseURL, err := url.Parse(fmt.Sprintf("%s%s", baseURL, apiPath))
 	if err != nil {
 		return nil, err
