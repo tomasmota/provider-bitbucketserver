@@ -199,11 +199,11 @@ func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 		Public:      cr.Spec.ForProvider.Public,
 	}
 
-	_, err := c.service.Client.Projects.CreateProject(ctx, createReq)
+	p, err := c.service.Client.Projects.CreateProject(ctx, createReq)
 	if err != nil {
 		return managed.ExternalCreation{}, err
 	}
-	fmt.Printf("Finished creating Project %s\n", cr.Name)
+	fmt.Printf("Finished creating Project %+v\n", p)
 
 	return managed.ExternalCreation{ConnectionDetails: managed.ConnectionDetails{}}, nil
 }
@@ -222,12 +222,12 @@ func (c *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 		Public:      cr.Spec.ForProvider.Public,
 	}
 
-	_, err := c.service.Client.Projects.UpdateProject(ctx, updateReq)
+	p, err := c.service.Client.Projects.UpdateProject(ctx, updateReq)
 	if err != nil {
 		return managed.ExternalUpdate{}, err
 	}
 
-	fmt.Printf("Finished updating Project %s\n", cr.Name)
+	fmt.Printf("Finished updating Project %+v\n", p)
 
 	return managed.ExternalUpdate{ConnectionDetails: managed.ConnectionDetails{}}, nil
 }
