@@ -242,9 +242,12 @@ func (c *external) Delete(ctx context.Context, mg resource.Managed) error {
 
 	cr.SetConditions(xpv1.Deleting())
 
-	c.service.Client.Projects.DeleteProject(ctx, &bitbucket.DeleteProjectRequest{
+	err := c.service.Client.Projects.DeleteProject(ctx, &bitbucket.DeleteProjectRequest{
 		Key: cr.Spec.ForProvider.Key,
 	})
+	if err != nil {
+		return err
+	}
 
 	fmt.Printf("Finished deleting Project %s\n", cr.Name)
 

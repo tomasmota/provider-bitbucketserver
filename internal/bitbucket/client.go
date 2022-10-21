@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -31,9 +31,12 @@ type Client struct {
 }
 
 var (
-	ErrPermission        = errors.New("permission")         // Permission denied.
-	ErrNotFound          = errors.New("not_found")          // Resource not found.
-	ErrResponseMalformed = errors.New("response_malformed") // Resource not found.
+	// Permission Denied
+	ErrPermission = errors.New("permission")
+	// Resource not found
+	ErrNotFound = errors.New("not_found")
+	// Received bad response from api
+	ErrResponseMalformed = errors.New("response_malformed")
 )
 
 func NewClient(baseURL string, base64creds string) (*Client, error) {
@@ -118,14 +121,14 @@ func (c *Client) do(ctx context.Context, req *http.Request, v interface{}) error
 		return err
 	}
 	defer res.Body.Close()
-	return c.handleResponse(ctx, res, v)
+	return c.handleResponse(res, v)
 }
 
 // handleResponse makes an HTTP request and populates the given struct v from
 // the response.  This is meant for internal testing and shouldn't be used
 // directly. Instead please use `Client.do`.
-func (c *Client) handleResponse(ctx context.Context, res *http.Response, v interface{}) error {
-	out, err := ioutil.ReadAll(res.Body)
+func (c *Client) handleResponse(res *http.Response, v interface{}) error {
+	out, err := io.ReadAll(res.Body)
 	if err != nil {
 		return err
 	}
