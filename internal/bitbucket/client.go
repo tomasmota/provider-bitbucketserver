@@ -41,6 +41,7 @@ var (
 	ErrResponseMalformed = errors.New("response_malformed")
 )
 
+// NewClient creates a new instance of the bitbucket client
 func NewClient(baseURL string, base64creds string) (*Client, error) {
 	pBaseURL, err := url.Parse(fmt.Sprintf("%s%s", baseURL, apiPath))
 	if err != nil {
