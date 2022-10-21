@@ -17,6 +17,8 @@ const (
 	jsonMediaType = "application/json"
 )
 
+// Client encapsulates a client that talks to the bitbucket server api
+// API Docs: https://developer.atlassian.com/server/bitbucket/rest/v805/intro/
 type Client struct {
 	// client represents the HTTP client used for making HTTP requests.
 	client *http.Client
@@ -31,11 +33,11 @@ type Client struct {
 }
 
 var (
-	// Permission Denied
+	// ErrPermission represents permission related errors
 	ErrPermission = errors.New("permission")
-	// Resource not found
+	// ErrNotFound represents errors where the resource being fetched was not found
 	ErrNotFound = errors.New("not_found")
-	// Received bad response from api
+	// ErrResponseMalformed represents errors related to api responses that do not match internal representation
 	ErrResponseMalformed = errors.New("response_malformed")
 )
 
@@ -61,6 +63,7 @@ func NewClient(baseURL string, base64creds string) (*Client, error) {
 	return c, nil
 }
 
+// ping is used to check that the client can correctly communicate with the bitbucket api
 func (c *Client) ping() error {
 	req, err := c.newRequest("GET", "projects", nil)
 	if err != nil {

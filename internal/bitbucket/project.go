@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// Provides operations around bitbucket projects
+// ProjectService provides operations around bitbucket projects
 type ProjectService interface {
 	GetProject(context.Context, *GetProjectRequest) (*Project, error)
 	CreateProject(context.Context, *CreateProjectRequest) (*Project, error)
@@ -17,7 +17,7 @@ type projectService struct {
 	client *Client
 }
 
-// Bitbucket Project
+// Project represents a Bitbucket Project
 type Project struct {
 	Name        string `json:"name"`
 	Key         string `json:"key"`
@@ -28,7 +28,7 @@ type Project struct {
 	Public      bool   `json:"public"`
 }
 
-// Fields required to fetch a project
+// GetProjectRequest contains the fields required to fetch a project
 type GetProjectRequest struct {
 	Key  string `json:"key"`
 	Name string `json:"name"`
@@ -52,7 +52,7 @@ func (ps *projectService) GetProject(ctx context.Context, getReq *GetProjectRequ
 	return &p, nil
 }
 
-// Fields required to create a Project
+// CreateProjectRequest contains the fields required to create a project
 type CreateProjectRequest struct {
 	Name        string `json:"name"`
 	Key         string `json:"key"`
@@ -75,7 +75,7 @@ func (ps *projectService) CreateProject(ctx context.Context, createReq *CreatePr
 	return &p, nil
 }
 
-// Fields required to delete a Project
+// DeleteProjectRequest contains the fields required to delete a project
 type DeleteProjectRequest struct {
 	Key string `json:"key"`
 }
@@ -94,7 +94,7 @@ func (ps *projectService) DeleteProject(ctx context.Context, deleteReq *DeletePr
 	return nil
 }
 
-// Fields required to update a Project
+// UpdateProjectRequest contains the fields required to update a project
 type UpdateProjectRequest struct {
 	Key         string `json:"key"`
 	Description string `json:"description,omitempty"`
