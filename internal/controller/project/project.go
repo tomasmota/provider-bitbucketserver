@@ -24,6 +24,7 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/connection"
 	"github.com/crossplane/crossplane-runtime/pkg/controller"
 	"github.com/crossplane/crossplane-runtime/pkg/event"
+	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/ratelimiter"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
@@ -203,6 +204,9 @@ func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 	if err != nil {
 		return managed.ExternalCreation{}, err
 	}
+
+	meta.SetExternalName(cr, p.Key)
+
 	fmt.Printf("Finished creating Project %+v\n", p)
 
 	return managed.ExternalCreation{ConnectionDetails: managed.ConnectionDetails{}}, nil

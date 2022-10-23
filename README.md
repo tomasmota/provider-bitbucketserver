@@ -8,3 +8,4 @@ This project contains a crossplane provider for managing Bitbucket Server resour
 ## TODO
 - Add Test scenarios
 - Setup build
+- Use Project key as external name and see how that affects uniqueness
