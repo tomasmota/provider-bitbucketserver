@@ -39,6 +39,8 @@ var (
 	ErrNotFound = errors.New("not_found")
 	// ErrResponseMalformed represents errors related to api responses that do not match internal representation
 	ErrResponseMalformed = errors.New("response_malformed")
+	// ErrConflict is used when a duplicate resource is trying to be created
+	ErrConflict = errors.New("conflict")
 )
 
 // NewClient creates a new instance of the bitbucket client
@@ -142,6 +144,8 @@ func (c *Client) handleResponse(res *http.Response, v interface{}) error {
 		return ErrNotFound
 	case 401:
 		return ErrPermission
+	case 409:
+		return ErrConflict
 	}
 
 	// this means we don't care about unmarshaling the response body into v
