@@ -3,12 +3,11 @@ kind: Provider
 metadata:
   name: provider-bitbucketserver
   annotations:
-    meta.crossplane.io/maintainer: Crossplane Maintainers <info@crossplane.io>
+    meta.crossplane.io/maintainer: Tomás Mota
     meta.crossplane.io/source: github.com/tomas-mota/provider-bitbucketserver
     meta.crossplane.io/license: Apache-2.0
-    meta.crossplane.io/description: |
-      A bitbucketserver that can be used to create Crossplane providers.
+    meta.crossplane.io/description: A provider for bitbucket server
 
 spec:
   controller:
-    image: DOCKER_REGISTRY/provider-bitbucketserver-controller:VERSION
+    image: registry.hub.docker.com/tomasmota/provider-bitbucketserver-controller:0.0.1
