@@ -79,6 +79,7 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 		managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name))),
 		managed.WithConnectionPublishers(cps...))
 
+	fmt.Printf("Finished setting up controller for %s\n", v1alpha1.ProjectGroupKind)
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
 		WithOptions(o.ForControllerRuntime()).
