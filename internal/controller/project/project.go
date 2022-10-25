@@ -18,7 +18,7 @@ package project
 
 import (
 	"context"
-	"fmt"
+	"log"
 
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/connection"
@@ -55,13 +55,17 @@ type BitbucketService struct {
 var (
 	newBitbucketService = func(baseURL string, creds []byte) (*BitbucketService, error) {
 		c, err := bitbucket.NewClient(baseURL, string(creds))
+		if err != nil {
+			// crash if we get an error setting up client
+			log.Fatalln(err)
+		}
 		return &BitbucketService{Client: c}, err
 	}
 )
 
 // Setup adds a controller that reconciles Project managed resources.
 func Setup(mgr ctrl.Manager, o controller.Options) error {
-	fmt.Printf("Setting up controller for %s\n", v1alpha1.ProjectGroupKind)
+	log.Printf("Setting up controller for %s\n", v1alpha1.ProjectGroupKind)
 	name := managed.ControllerName(v1alpha1.ProjectGroupKind)
 
 	cps := []managed.ConnectionPublisher{managed.NewAPISecretPublisher(mgr.GetClient(), mgr.GetScheme())}
@@ -79,7 +83,7 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 		managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name))),
 		managed.WithConnectionPublishers(cps...))
 
-	fmt.Printf("Finished setting up controller for %s\n", v1alpha1.ProjectGroupKind)
+	log.Printf("Finished setting up controller for %s\n", v1alpha1.ProjectGroupKind)
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
 		WithOptions(o.ForControllerRuntime()).
@@ -142,7 +146,7 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 		return managed.ExternalObservation{}, errors.New(errNotProject)
 	}
 
-	fmt.Printf("Observing Project %s\n", cr.Name)
+	log.Printf("Observing Project %s\n", cr.Name)
 
 	p, err := c.service.Client.Projects.GetProject(ctx, &bitbucket.GetProjectRequest{
 		Key:  cr.Spec.ForProvider.Key,
@@ -191,7 +195,7 @@ func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 
 	cr.SetConditions(xpv1.Creating())
 
-	fmt.Printf("Attempting to create Project %s\n", cr.Name)
+	log.Printf("Attempting to create Project %s\n", cr.Name)
 
 	createReq := &bitbucket.CreateProjectRequest{
 		Name:        cr.Name,
@@ -204,7 +208,7 @@ func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 	if err != nil {
 		return managed.ExternalCreation{}, err
 	}
-	fmt.Printf("Finished creating Project %+v\n", p)
+	log.Printf("Finished creating Project %+v\n", p)
 
 	return managed.ExternalCreation{ConnectionDetails: managed.ConnectionDetails{}}, nil
 }
@@ -215,7 +219,7 @@ func (c *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 		return managed.ExternalUpdate{}, errors.New(errNotProject)
 	}
 
-	fmt.Printf("Attempting to update Project %s\n", cr.Name)
+	log.Printf("Attempting to update Project %s\n", cr.Name)
 
 	updateReq := &bitbucket.UpdateProjectRequest{
 		Key:         cr.Spec.ForProvider.Key,
@@ -228,7 +232,7 @@ func (c *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 		return managed.ExternalUpdate{}, err
 	}
 
-	fmt.Printf("Finished updating Project %+v\n", p)
+	log.Printf("Finished updating Project %+v\n", p)
 
 	return managed.ExternalUpdate{ConnectionDetails: managed.ConnectionDetails{}}, nil
 }
@@ -239,7 +243,7 @@ func (c *external) Delete(ctx context.Context, mg resource.Managed) error {
 		return errors.New(errNotProject)
 	}
 
-	fmt.Printf("Attempting to delete Project %s\n", cr.Name)
+	log.Printf("Attempting to delete Project %s\n", cr.Name)
 
 	cr.SetConditions(xpv1.Deleting())
 
@@ -250,7 +254,7 @@ func (c *external) Delete(ctx context.Context, mg resource.Managed) error {
 		return err
 	}
 
-	fmt.Printf("Finished deleting Project %s\n", cr.Name)
+	log.Printf("Finished deleting Project %s\n", cr.Name)
 
 	return nil
 }
