@@ -18,12 +18,14 @@ package project
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/connection"
 	"github.com/crossplane/crossplane-runtime/pkg/controller"
 	"github.com/crossplane/crossplane-runtime/pkg/event"
+	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/ratelimiter"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
@@ -146,14 +148,18 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 		return managed.ExternalObservation{}, errors.New(errNotProject)
 	}
 
-	log.Printf("Observing Project %s\n", cr.Name)
+	if meta.GetExternalName(cr) == "" {
+		return managed.ExternalObservation{
+			ResourceExists: false,
+		}, nil
+	}
 
 	p, err := c.service.Client.Projects.GetProject(ctx, &bitbucket.GetProjectRequest{
-		Key:  cr.Spec.ForProvider.Key,
-		Name: cr.Name,
+		Key: meta.GetExternalName(cr),
 	})
 	if err != nil {
 		if errors.Is(err, bitbucket.ErrNotFound) {
+			log.Printf("Project with key (%s) does not exist\n", meta.GetExternalName(cr))
 			return managed.ExternalObservation{ResourceExists: false}, nil
 		}
 		return managed.ExternalObservation{}, errors.Wrap(err, "error fetching Bitbucket project")
@@ -206,9 +212,11 @@ func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 
 	p, err := c.service.Client.Projects.CreateProject(ctx, createReq)
 	if err != nil {
+		log.Println(err)
 		return managed.ExternalCreation{}, err
 	}
 	log.Printf("Finished creating Project %+v\n", p)
+	meta.SetExternalName(cr, fmt.Sprint(p.Key))
 
 	return managed.ExternalCreation{ConnectionDetails: managed.ConnectionDetails{}}, nil
 }
@@ -229,6 +237,7 @@ func (c *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 
 	p, err := c.service.Client.Projects.UpdateProject(ctx, updateReq)
 	if err != nil {
+		log.Println(err)
 		return managed.ExternalUpdate{}, err
 	}
 
@@ -251,6 +260,7 @@ func (c *external) Delete(ctx context.Context, mg resource.Managed) error {
 		Key: cr.Spec.ForProvider.Key,
 	})
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 

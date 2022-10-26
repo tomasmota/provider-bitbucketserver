@@ -30,8 +30,7 @@ type Project struct {
 
 // GetProjectRequest contains the fields required to fetch a project
 type GetProjectRequest struct {
-	Key  string `json:"key"`
-	Name string `json:"name"`
+	Key string `json:"key"`
 }
 
 func (ps *projectService) GetProject(ctx context.Context, getReq *GetProjectRequest) (*Project, error) {
@@ -44,10 +43,6 @@ func (ps *projectService) GetProject(ctx context.Context, getReq *GetProjectRequ
 	err = ps.client.do(ctx, req, &p)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching projects: %w", err)
-	}
-	// We only consider that this project exists if both key and name match
-	if p.Name != getReq.Name {
-		return nil, ErrNotFound
 	}
 	return &p, nil
 }
